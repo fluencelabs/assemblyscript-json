@@ -54,7 +54,7 @@ export class JSONEncoder {
         this.isFirstKey.pop();
     }
 
-    pushObject(name: string): bool {
+    pushObject(name: string | null): bool {
         this.writeKey(name);
         this.write("{");
         this.isFirstKey.push(true);
@@ -66,14 +66,14 @@ export class JSONEncoder {
         this.isFirstKey.pop();
     }
 
-    private writeKey(str: string): void {
+    private writeKey(str: string | null): void {
         if (!this.isFirstKey[this.isFirstKey.length - 1]) {
             this.write(",");
         } else {
             this.isFirstKey[this.isFirstKey.length - 1] = false;
         }
         if (str != null) {
-            this.writeString(str);
+            this.writeString(str as string);
             this.write(":");
         }
     }

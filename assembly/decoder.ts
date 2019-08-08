@@ -1,6 +1,3 @@
-declare function logStr(str: string): void;
-declare function logF64(val: f64): void;
-
 /**
  * Extend from this class to handle events from parser.
  * Default implementation traverses whole object tree and does nothing.
@@ -76,8 +73,8 @@ let CHAR_A_LOWER = "a".charCodeAt(0);
 
 export class DecoderState {
     readIndex: i32 = 0;
-    buffer: Uint8Array = null;
-    lastKey: string = null;
+    buffer: Uint8Array = new Uint8Array(0);
+    lastKey: string | null = null;
 }
 
 export class JSONDecoder<JSONHandlerT extends JSONHandler> {
@@ -89,7 +86,7 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
         this.handler = handler;
     }
 
-    deserialize(buffer: Uint8Array, decoderState: DecoderState = null): void {
+    deserialize(buffer: Uint8Array, decoderState: DecoderState = null as DecoderState): void {
         if (decoderState) {
             this.state = decoderState;
         } else {
@@ -123,7 +120,7 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
             || this.parseString()
             || this.parseBoolean()
             || this.parseNumber()
-            || this.parseNull()
+            || this.parseNull();
         this.skipWhitespace();
         return result;
     }
@@ -132,7 +129,7 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
         if (this.peekChar() != "{".charCodeAt(0)) {
             return false;
         }
-        let key = this.state.lastKey;
+        let key = this.state.lastKey as string;
         this.state.lastKey = null;
         if (this.handler.pushObject(key)) {
             this.readChar();
@@ -165,7 +162,7 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
         if (this.peekChar() != "[".charCodeAt(0)) {
             return false;
         }
-        let key = this.state.lastKey;
+        let key = this.state.lastKey as string;
         this.state.lastKey = null;
         if (this.handler.pushArray(key)) {
             this.readChar();
@@ -183,21 +180,21 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
             assert(this.readChar() == "]".charCodeAt(0), "Unexpected end of array");
         }
         this.handler.popArray();
-        return true;;
+        return true;
     }
 
     private parseString(): bool {
         if (this.peekChar() != '"'.charCodeAt(0)) {
             return false;
         }
-        this.handler.setString(this.state.lastKey, this.readString());
+        this.handler.setString(this.state.lastKey as string, this.readString());
         return true;
     }
 
     private readString(): string {
         assert(this.readChar() == '"'.charCodeAt(0), "Expected double-quoted string");
         let savedIndex = this.state.readIndex;
-        let stringParts: Array<string> = null;
+        let stringParts: Array<string> = null as Array<string>;
         for (;;) {
             let byte = this.readChar();
             assert(byte >= 0x20, "Unexpected control character");
@@ -231,8 +228,6 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
                 savedIndex = this.state.readIndex;
             }
         }
-        // Should never happen
-        return "";
     }
 
     private readEscapedChar(): string {
@@ -301,7 +296,7 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
             digits++;
         }
         if (digits > 0) {
-            this.handler.setInteger(this.state.lastKey, number * sign);
+            this.handler.setInteger(this.state.lastKey as string, number * sign);
             return true;
         }
         return false;
@@ -310,12 +305,12 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
     private parseBoolean(): bool {
         if (this.peekChar() == FALSE_STR.charCodeAt(0)) {
             this.readAndAssert(FALSE_STR);
-            this.handler.setBoolean(this.state.lastKey, false);
+            this.handler.setBoolean(this.state.lastKey as string, false);
             return true;
         }
         if (this.peekChar() == TRUE_STR.charCodeAt(0)) {
             this.readAndAssert(TRUE_STR);
-            this.handler.setBoolean(this.state.lastKey, true);
+            this.handler.setBoolean(this.state.lastKey as string, true);
             return true;
         }
 
@@ -325,7 +320,7 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
     private parseNull(): bool {
         if (this.peekChar() == NULL_STR.charCodeAt(0)) {
             this.readAndAssert(NULL_STR);
-            this.handler.setNull(this.state.lastKey);
+            this.handler.setNull(this.state.lastKey as string);
             return true;
         }
         return false;

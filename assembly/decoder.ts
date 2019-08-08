@@ -228,6 +228,9 @@ export class JSONDecoder<JSONHandlerT extends JSONHandler> {
                 savedIndex = this.state.readIndex;
             }
         }
+
+        // just to help to compile
+        return "";
     }
 
     private readEscapedChar(): string {
